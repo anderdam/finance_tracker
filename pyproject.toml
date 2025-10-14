@@ -1,6 +1,6 @@
 [project]
 name = "expense-tracker"
-version = "0.1.0"
+version = "0.2.0"
 description = "Personal expense and income tracker"
 authors = [
     { name = "Anderson R Damasceno", email = "anderdam@gmail.com" }
@@ -69,7 +69,7 @@ packages = ["app"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0"
+version = "0.2.0"
 version_files = ["pyproject.toml:version"]
 update_changelog_on_bump = true
 changelog_file = "CHANGELOG.md"

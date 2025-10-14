@@ -22,3 +22,9 @@
 - Defined SQLAlchemy models: User, Account, Category, Transaction, Setting.
 - Established database session handling via get_db() generator.
 - Implemented basic CRUD operations for Transaction.
+
+## v0.2.0 (2025-10-13)
+
+### Feat
+
+- **initial-commit-with-structure,-classes-and-models**: added classes, models, crud and some other implementations
