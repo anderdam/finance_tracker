@@ -1,0 +1,68 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Virtual environments
+.venv/
+venv/
+env/
+finance_tracker/  # if uv creates a venv with this name
+
+# IDE settings
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Docker
+*.env
+.env.*
+docker-compose.override.yml
+**/rclone.conf  # sensitive backup config
+
+# Attachments and backups
+attachments/
+backups/
+*.dump
+*.tar.gz
+*.zip
+*.bak
+
+# Streamlit
+.streamlit/
+
+# Test and coverage
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# MyPy, Ruff, Bandit
+.mypy_cache/
+.ruff_cache/
+.bandit/
+
+# Pre-commit
+.pre-commit-config.yaml
+.pre-commit-hooks.yaml
+
+# Logs and temp
+*.log
+*.tmp
+*.swp
