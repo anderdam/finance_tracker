@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from uuid import UUID
 
 from sqlalchemy import (
@@ -8,6 +9,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import CHAR
@@ -21,6 +23,12 @@ from sqlalchemy.orm import (
 
 class Base(DeclarativeBase):
     pass
+
+
+class TransactionType(str, Enum):
+    EXPENSE = "expense"
+    INCOME = "income"
+    TRANSFER = "transfer"
 
 
 class User(Base):
@@ -53,17 +61,18 @@ class User(Base):
 
 class Account(Base):
     __tablename__ = "accounts"
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_user_account_name"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     currency: Mapped[str] = mapped_column(CHAR(3), nullable=False, default="BRL")
     balance: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False, default=0)
     details: Mapped[dict[str, object]] = mapped_column(
-        JSON, nullable=False, server_default="{}"
+        JSON, nullable=False, default=dict
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -80,7 +89,9 @@ class Category(Base):
     __tablename__ = "categories"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     kind: Mapped[str] = mapped_column(String(50), nullable=False)  # expense or income
     parent_id: Mapped[UUID | None] = mapped_column(
@@ -106,20 +117,20 @@ class Transaction(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     account_id: Mapped[UUID] = mapped_column(
-        ForeignKey("accounts.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("accounts.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     category_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("categories.id", ondelete="SET NULL"), nullable=True
     )
     occurred_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+        DateTime(timezone=True), nullable=False, index=True
     )
     amount: Mapped[float] = mapped_column(Numeric(18, 2), nullable=False)
     currency: Mapped[str] = mapped_column(CHAR(3), nullable=False, default="USD")
-    type: Mapped[str] = mapped_column(Text, nullable=False)  # expense, income, transfer
+    type: Mapped[TransactionType] = mapped_column(Text, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     attachment_path: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -133,13 +144,16 @@ class Transaction(Base):
     account: Mapped["Account"] = relationship(back_populates="transactions")
     category: Mapped["Category | None"] = relationship(back_populates="transactions")
 
+    def __repr__(self) -> str:
+        return f"<Transaction {self.id} {self.amount} {self.currency}>"
+
 
 class Setting(Base):
     __tablename__ = "settings"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     key: Mapped[str] = mapped_column(Text, nullable=False)
     value: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)

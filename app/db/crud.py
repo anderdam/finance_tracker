@@ -1,9 +1,8 @@
 from typing import Any, Sequence
 from uuid import UUID
 
-from sqlalchemy import Row, delete, insert, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import expression
 
 from app.models.orm_models import Transaction as TransactionModel
 from app.models.schemas import TransactionCreate
@@ -32,9 +31,7 @@ def create_transaction(
 
 
 def get_transaction(db: Session, tx_id: UUID) -> TransactionModel | None:
-    stmt = select(TransactionModel).where(
-        expression.true().op("AND")(TransactionModel.id == tx_id)
-    )
+    stmt = select(TransactionModel).where(TransactionModel.id == tx_id)
     result = db.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -44,7 +41,7 @@ def list_transactions(
 ) -> Sequence[TransactionModel]:
     stmt = (
         select(TransactionModel)
-        .where(expression.true().op("AND")(TransactionModel.user_id == user_id))
+        .where(TransactionModel.user_id == user_id)
         .order_by(TransactionModel.occurred_at.desc())
         .limit(limit)
         .offset(offset)
@@ -54,25 +51,24 @@ def list_transactions(
 
 def update_transaction(
     db: Session, tx_id: UUID, patch: dict[str, Any]
-) -> Row[tuple[Any, ...] | Any] | None:
+) -> TransactionModel | None:
     stmt = (
         update(TransactionModel)
-        .where(expression.true().op("AND")(TransactionModel.id == tx_id))
+        .where(TransactionModel.id == tx_id)
         .values(**patch)
         .returning(TransactionModel)
     )
-    res = db.execute(stmt)
+    result = db.execute(stmt)
     db.commit()
-    return res.fetchone()
+    return result.scalar_one_or_none()
 
 
 def delete_transaction(db: Session, tx_id: UUID) -> TransactionModel | None:
     stmt = (
         delete(TransactionModel)
-        .where(expression.true().op("AND")(TransactionModel.id == tx_id))
+        .where(TransactionModel.id == tx_id)
         .returning(TransactionModel)
     )
-    res = db.execute(stmt)
+    result = db.execute(stmt)
     db.commit()
-    row = res.fetchone()
-    return row[0] if row else None
+    return result.scalar_one_or_none()
